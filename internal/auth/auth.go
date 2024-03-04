@@ -151,3 +151,20 @@ func GetBearerToken(headers http.Header) (string, error) {
 	// all checks passed, return the token
 	return splitAuth[1], nil
 }
+
+// GetAPIKey - returns the apiKey within the request header
+func GetAPIKey(headers http.Header) (string, error) {
+	// get header in field of "authorization"
+	authHeader := headers.Get("Authorization")
+	// throw error if missing such field in headers
+	if authHeader == "" {
+		return "", ErrNoAuthHeaderIncluded
+	}
+	// check if auth header is in correct format, "ApiKey <key>"
+	splitAuth := strings.Split(authHeader, " ")
+	if len(splitAuth) < 2 || splitAuth[0] != "ApiKey" {
+		return "", errors.New("malformed authorization header")
+	}
+	// all checks passed, return the token
+	return splitAuth[1], nil
+}

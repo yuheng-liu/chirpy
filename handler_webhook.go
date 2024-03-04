@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/yuheng-liu/chirpy/internal/auth"
 	"github.com/yuheng-liu/chirpy/internal/database"
 )
 
@@ -16,10 +17,21 @@ func (cfg *apiConfig) handlerWebhook(w http.ResponseWriter, r *http.Request) {
 			UserId int `json:"user_id"`
 		} `json:"data"`
 	}
+	// retrieve api key from request header
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Couldn't find api key")
+		return
+	}
+	// check if received apiKey is same as local version
+	if apiKey != cfg.polkaKey {
+		respondWithError(w, http.StatusUnauthorized, "API key is invalid")
+		return
+	}
 	// decoding json to struct and handle error
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
